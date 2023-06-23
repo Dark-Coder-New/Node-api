@@ -7,6 +7,10 @@
 // import {v4 as uuid4} from 'uuid';
 // import isLoggedIn from "../middlewares/isLoggedIn.js";
 
+
+
+
+
 const express = require('express');
 const authRouter =  express.Router()
 const mongoose = require("mongoose");
@@ -14,12 +18,18 @@ const user =  mongoose.model("User");
 const bcrypt = require("bcrypt");
 const { v4:uuid4 } = require('uuid'); 
 const isLoggedIn = require("../middlewares/isLoggedIn.js");
+const jwt = require("jsonwebtoken")
+require("dotenv").config()
 
 
+
+// access token from .env file: 
+
+// console.log("secret",process.env.JSON_SECRET_KEY.length)
 
 authRouter.post("/signup", (req, res) => {
-    //    console.log(req.body)
-    //    res.send("Data received")
+       console.log(req.body)
+      //  res.send("Data received")
       const {name, email, password} = req.body;
 
       // validations: 
@@ -102,14 +112,10 @@ authRouter.post("/login", (req, res) => {
                         return res.send({error: "Invalid password"})
                      }
                       // generate token:  
-                      let token = uuid4();
-                      foundUser.token = token;
-                      foundUser.save()
-                      .then((savedUser)=>{
-                        return res.send({success: true, message: "User logged in successfully", data: savedUser})
-                      })
+                      let token = jwt.sign({_id: foundUser._id,name: foundUser.name}, process.env.JSON_SECRET_KEY)
 
-                      .catch(err=>console.log("issue while saving token in database",err))
+                        return res.send({success: true, message: "User logged in successfully", data: foundUser, token:token})
+                     
 
                     
                 })
@@ -125,8 +131,22 @@ authRouter.post("/login", (req, res) => {
 
 
 authRouter.get("/secret1",isLoggedIn, (req, res)=>{
-    //  check if user is logged in or not
-     return res.send({success: true, message: "You are authorized to be a Raw Agent", loggedInAgentDetails: req.user})
+     
+   //  let authorization = req.headers.authorization;
+   // //  console.log("authorization", authorization)
+   // let token = authorization.split(" ")[1];
+   //   user.findOne({token: token})
+   //     .then((foundUser)=>{
+   //          if(!foundUser){
+   //             return res.send({error: "User not found"})
+   //          }
+            return res.send({success: true, message: "You are authorized to be a Raw Agent", loggedInAgentDetails: req.user})
+      //  })
+      //    .catch(err=>console.log(err))
+
+
+
+     
 })
 
 
